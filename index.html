@@ -156,17 +156,6 @@
         <video id="launch-video" class="w-full h-full object-cover" playsinline>
             您的浏览器不支持 HTML5 视频播放。
         </video>
-        <div id="video-controls" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center space-x-6 px-8 py-3 bg-slate-950/80 border border-emerald-500/30 rounded-full backdrop-blur-sm z-50">
-            <button id="video-play-pause" class="text-cyan-400 hover:text-cyan-300 transition-colors">
-                <i class="fa-solid fa-pause text-xl"></i>
-            </button>
-            <div class="w-64 md:w-96 bg-slate-800 h-1.5 rounded-full relative overflow-hidden cursor-pointer" id="video-progress-bar">
-                <div class="bg-gradient-to-r from-cyan-400 to-emerald-500 h-full w-0" id="video-progress-fill"></div>
-            </div>
-            <button id="video-close" class="text-rose-400 hover:text-rose-300 transition-colors font-semibold text-xs tracking-wider uppercase flex items-center space-x-1">
-                <span>跳过</span><i class="fa-solid fa-forward-step"></i>
-            </button>
-        </div>
     </div>
 
     <!-- Settings Modal -->
@@ -281,33 +270,6 @@
                 filter.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + duration);
                 osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
                 osc.start(); osc.stop(this.ctx.currentTime + duration);
-            },
-            playLaunchBoom() {
-                if (!this.enabled) return; this.init();
-                const duration = 3.5, now = this.ctx.currentTime;
-                const subOsc = this.ctx.createOscillator(), subGain = this.ctx.createGain();
-                subOsc.type = 'sine';
-                subOsc.frequency.setValueAtTime(120, now);
-                subOsc.frequency.exponentialRampToValueAtTime(35, now + duration);
-                subGain.gain.setValueAtTime(0.3, now);
-                subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-                const bufferSize = this.ctx.sampleRate * duration;
-                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-                const data = buffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                const noiseNode = this.ctx.createBufferSource();
-                noiseNode.buffer = buffer;
-                const noiseFilter = this.ctx.createBiquadFilter();
-                noiseFilter.type = 'bandpass';
-                noiseFilter.frequency.setValueAtTime(800, now);
-                noiseFilter.frequency.exponentialRampToValueAtTime(150, now + duration);
-                const noiseGain = this.ctx.createGain();
-                noiseGain.gain.setValueAtTime(0.15, now);
-                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-                subOsc.connect(subGain); subGain.connect(this.ctx.destination);
-                noiseNode.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(this.ctx.destination);
-                subOsc.start(now); subOsc.stop(now + duration);
-                noiseNode.start(now); noiseNode.stop(now + duration);
             }
         };
 
@@ -359,7 +321,7 @@
 
         // --- STATE ---
         let isScanning = false, scanProgress = 0, scanTimer = null, isVideoPlaying = false;
-        let videoObjectURL = null; // holds blob URL for uploaded file
+        let videoObjectURL = null;
 
         // --- ELEMENTS ---
         const triggerArea = document.getElementById('trigger-area');
@@ -368,10 +330,6 @@
         const scannerBeam = document.getElementById('scanner-beam');
         const videoContainer = document.getElementById('video-container');
         const launchVideo = document.getElementById('launch-video');
-        const videoProgressFill = document.getElementById('video-progress-fill');
-        const videoProgressBar = document.getElementById('video-progress-bar');
-        const videoPlayPauseBtn = document.getElementById('video-play-pause');
-        const videoCloseBtn = document.getElementById('video-close');
         const settingsModal = document.getElementById('settings-modal');
         const mainTitle = document.getElementById('main-title');
         const subTitle = document.getElementById('sub-title');
@@ -387,7 +345,6 @@
             progressCircle.style.strokeDashoffset = 439.8 - (percent / 100) * 439.8;
         }
 
-        // Set initial video from URL input (relative path or full URL)
         inputVideoUrl.value = './video.mp4';
         updateVideoStatus(true, 'video.mp4');
 
@@ -406,13 +363,12 @@
             }
         }
 
-        // --- FILE UPLOAD (main method) ---
+        // --- FILE UPLOAD ---
         function loadVideoFile(file) {
             if (!file || !file.type.startsWith('video/')) {
                 alert('请选择有效的视频文件（MP4、WebM 等）');
                 return;
             }
-            // Revoke previous object URL to free memory
             if (videoObjectURL) URL.revokeObjectURL(videoObjectURL);
 
             videoObjectURL = URL.createObjectURL(file);
@@ -497,7 +453,6 @@
             document.getElementById('launch-hub').style.opacity = '0';
             document.getElementById('intro-texts').style.transform = 'translateY(-50px)';
             document.getElementById('intro-texts').style.opacity = '0';
-            // Video plays directly after 800ms (no countdown)
             setTimeout(startVideoPlayback, 800);
         }
 
@@ -510,39 +465,14 @@
             launchVideo.play().catch(() => { launchVideo.muted = true; launchVideo.play(); });
         }
 
-        launchVideo.addEventListener('timeupdate', () => {
-            if (launchVideo.duration) videoProgressFill.style.width = `${(launchVideo.currentTime / launchVideo.duration) * 100}%`;
+        // Video ended: pause and keep video on screen (do not return to homepage)
+        launchVideo.addEventListener('ended', () => {
+            launchVideo.pause();
+            launchVideo.currentTime = 0;
         });
 
-        videoProgressBar.addEventListener('click', (e) => {
-            const rect = videoProgressBar.getBoundingClientRect();
-            launchVideo.currentTime = ((e.clientX - rect.left) / rect.width) * launchVideo.duration;
-        });
-
-        videoPlayPauseBtn.addEventListener('click', () => {
-            if (launchVideo.paused) { launchVideo.play(); videoPlayPauseBtn.innerHTML = '<i class="fa-solid fa-pause text-xl"></i>'; }
-            else { launchVideo.pause(); videoPlayPauseBtn.innerHTML = '<i class="fa-solid fa-play text-xl"></i>'; }
-        });
-
-        function endVideo() {
-            launchVideo.pause(); launchVideo.currentTime = 0;
-            videoContainer.style.opacity = '0';
-            setTimeout(() => {
-                videoContainer.classList.add('hidden'); videoContainer.classList.remove('flex');
-                isVideoPlaying = false;
-                document.getElementById('launch-hub').style.transform = 'scale(1)';
-                document.getElementById('launch-hub').style.opacity = '1';
-                document.getElementById('intro-texts').style.transform = 'translateY(0)';
-                document.getElementById('intro-texts').style.opacity = '1';
-                cancelScan();
-            }, 1000);
-        }
-
-        launchVideo.addEventListener('ended', endVideo);
-        videoCloseBtn.addEventListener('click', endVideo);
         launchVideo.addEventListener('error', () => {
             if (isVideoPlaying) {
-                endVideo();
                 setTimeout(() => alert('视频载入失败。请检查文件格式或网络连接。'), 500);
             }
         });
@@ -563,7 +493,6 @@
 
             const urlVal = inputVideoUrl.value.trim();
             if (urlVal) {
-                // URL mode: clear any file upload and use the URL
                 if (videoObjectURL) { URL.revokeObjectURL(videoObjectURL); videoObjectURL = null; }
                 launchVideo.src = urlVal;
                 launchVideo.load();
@@ -588,7 +517,6 @@
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 if (!settingsModal.classList.contains('hidden')) { settingsModal.classList.add('hidden'); settingsModal.classList.remove('flex'); }
-                if (isVideoPlaying) endVideo();
             }
         });
 
