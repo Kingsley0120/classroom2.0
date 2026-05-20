@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精明课室 2.0 · 智慧教育启动礼</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #04091a;
+            overflow: hidden;
+        }
+        .tech-font { font-family: 'Orbitron', sans-serif; }
+        .grid-bg {
+            background-image: linear-gradient(rgba(14, 30, 74, 0.6) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(14, 30, 74, 0.6) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .text-glow { text-shadow: 0 0 10px rgba(6, 182, 212, 0.8), 0 0 20px rgba(16, 185, 129, 0.4); }
+        @keyframes rotateCW {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes rotateCCW {
+            0% { transform: translate(-50%, -50%) rotate(360deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+        .ring-fast { animation: rotateCW 12s linear infinite; }
+        .ring-slow { animation: rotateCCW 24s linear infinite; }
+        @keyframes scan {
+            0%, 100% { top: 0%; opacity: 0.3; }
+            50% { top: 100%; opacity: 1; }
+        }
+        .scanner-line { animation: scan 2.5s ease-in-out infinite; }
+        @keyframes breath {
+            0%, 100% { opacity: 0.4; transform: scale(0.98); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+        }
+        .glow-breath { animation: breath 4s ease-in-out infinite; }
+
+        /* Video drop zone */
+        #drop-zone {
+            border: 2px dashed rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+        }
+        #drop-zone.drag-over {
+            border-color: rgba(6, 182, 212, 0.9);
+            background: rgba(6, 182, 212, 0.08);
+        }
+        #drop-zone:hover {
+            border-color: rgba(6, 182, 212, 0.7);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.5); border-radius: 4px; }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between relative select-none">
+
+    <canvas id="bg-canvas" class="absolute inset-0 w-full h-full z-0 pointer-events-none"></canvas>
+    <div class="absolute inset-0 grid-bg z-0 opacity-40 pointer-events-none"></div>
+
+    <!-- Header -->
+    <header class="w-full p-6 flex justify-between items-center z-10 relative">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-emerald-500 flex items-center justify-center" style="box-shadow: 0 0 25px rgba(6,182,212,0.5)">
+                <i class="fa-solid fa-chalkboard-user text-lg text-white"></i>
+            </div>
+            <div>
+                <h2 class="tech-font font-bold tracking-widest text-cyan-400 text-sm">EDU-TECH LINK</h2>
+                <p class="text-[10px] text-emerald-400 tracking-wider">SMART CLASSROOM OPERATING SYSTEM</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-2 bg-slate-900/60 border border-cyan-500/30 px-3 py-1.5 rounded-full text-xs">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                <span class="text-cyan-400 tech-font tracking-wider">NETWORK: ACTIVE</span>
+            </div>
+            <button id="settings-btn" class="w-10 h-10 rounded-full bg-slate-900/40 hover:bg-cyan-500/20 border border-slate-700 hover:border-cyan-500 transition-all duration-300 flex items-center justify-center text-slate-400 hover:text-cyan-400">
+                <i class="fa-solid fa-gears text-lg"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-grow flex flex-col items-center justify-center z-10 relative px-4 text-center">
+        <div id="intro-texts" class="mb-12 transition-all duration-1000">
+            <div class="inline-block px-4 py-1.5 mb-4 border border-emerald-500/40 bg-emerald-950/20 rounded text-emerald-300 text-xs tracking-[0.3em] font-medium tech-font uppercase">
+                <i class="fa-solid fa-graduation-cap mr-2 animate-bounce text-[10px]"></i> 2026 SMART CLASSROOM 2.0
+            </div>
+            <h1 id="main-title" class="text-4xl md:text-6xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-emerald-300 drop-shadow-lg mb-4 text-glow px-4">
+                精明课室 2.0 启动礼
+            </h1>
+            <p id="sub-title" class="text-slate-300 text-sm md:text-lg max-w-2xl mx-auto font-light leading-relaxed tracking-widest px-6">
+                智能重塑教学空间，数据赋能高效课堂。开启智慧教育新纪元，请激活智慧星门以释放未来教学的无限可能。
+            </p>
+        </div>
+
+        <!-- Launch Hub -->
+        <div id="launch-hub" class="relative w-[340px] h-[340px] md:w-[400px] md:h-[400px] flex items-center justify-center transition-all duration-1000">
+            <div class="absolute w-full h-full rounded-full border border-dashed border-emerald-500/20 ring-slow"></div>
+            <div class="absolute w-[92%] h-[92%] rounded-full border-2 border-dashed border-cyan-500/30 ring-fast"></div>
+            <div class="absolute w-[80%] h-[80%] rounded-full border-4 border-emerald-500/10 glow-breath"></div>
+            <div class="absolute w-[60%] h-[60%] rounded-full bg-emerald-600/10 filter blur-3xl glow-breath"></div>
+
+            <div id="trigger-area" class="absolute w-[68%] h-[68%] rounded-full bg-slate-950/90 border-2 border-emerald-500/60 flex flex-col items-center justify-center cursor-pointer overflow-hidden transition-all duration-300 hover:border-cyan-400 group" style="transition: box-shadow 0.3s" onmouseenter="this.style.boxShadow='0 0 50px rgba(16,185,129,0.5)'" onmouseleave="this.style.boxShadow=''">
+                <div class="absolute inset-3 rounded-full border border-slate-800 pointer-events-none"></div>
+                <div id="scanner-beam" class="absolute w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent top-0 left-0 scanner-line z-10 hidden" style="box-shadow: 0 0 15px rgba(6,182,212,1)"></div>
+
+                <div class="relative z-20 flex flex-col items-center justify-center select-none">
+                    <div id="biometric-icon" class="w-20 h-20 text-emerald-400 transition-all duration-500 transform group-hover:scale-110 mb-2 flex items-center justify-center" style="filter: drop-shadow(0 0 10px rgba(16,185,129,0.8))">
+                        <svg class="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="12" rx="2" stroke-dasharray="1 1" />
+                            <path d="M2 20h20" /><path d="M5 20v-4" /><path d="M19 20v-4" />
+                            <path d="M12 6.5l4.5 2-4.5 2-4.5-2z" fill="rgba(16, 185, 129, 0.2)" />
+                            <path d="M9.5 9.5v2c0 .8 1.1 1.5 2.5 1.5s2.5-.7 2.5-1.5v-2" />
+                            <circle cx="12" cy="1.5" r="1" fill="currentColor"/>
+                            <line x1="12" y1="2.5" x2="12" y2="4" stroke-dasharray="2 2" />
+                        </svg>
+                    </div>
+                    <div class="text-center">
+                        <span id="scan-status" class="block text-emerald-400 text-xs tracking-[0.2em] font-bold uppercase transition-all duration-300">激活智慧星门</span>
+                        <span id="scan-sub" class="block text-[10px] text-slate-500 tracking-wider mt-1 font-mono">ACTIVATE GATEWAY</span>
+                    </div>
+                    <svg class="absolute -inset-12 w-[160px] h-[160px] transform -rotate-90 pointer-events-none">
+                        <circle cx="80" cy="80" r="70" stroke="rgba(16, 185, 129, 0.15)" stroke-width="3" fill="transparent" />
+                        <circle id="progress-circle" cx="80" cy="80" r="70" stroke="#06b6d4" stroke-width="4" fill="transparent"
+                                stroke-dasharray="439.8" stroke-dashoffset="439.8" class="transition-all duration-75 ease-out" />
+                    </svg>
+                </div>
+                <div class="absolute bottom-4 font-mono text-[9px] text-slate-600 opacity-45 pointer-events-none select-none tracking-widest uppercase">EDU-CORE_SYS_v2.0</div>
+            </div>
+        </div>
+
+        <!-- No video warning -->
+        <div id="no-video-warning" class="hidden mt-6 px-4 py-2 bg-amber-900/30 border border-amber-500/40 rounded-lg text-amber-300 text-xs tracking-wider text-center max-w-sm">
+            <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+            尚未载入视频。请点击右上角 ⚙️ 上传或设置视频。
+        </div>
+
+        <div id="hint-text" class="mt-8 text-xs text-slate-500 tracking-widest font-mono">
+            [ SMART SYSTEMS CONNECTED • AUTHORIZED INTERFACES ]
+        </div>
+    </main>
+
+    <!-- Fullscreen Video Container -->
+    <div id="video-container" class="fixed inset-0 w-full h-full bg-black z-40 hidden items-center justify-center" style="opacity:0; transition: opacity 1s;">
+        <video id="launch-video" class="w-full h-full object-cover" src="/workspaces/classroom2.0/video.mp4" playsinline>
+            您的浏览器不支持 HTML5 视频播放。
+        </video>
+        <div id="video-controls" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center space-x-6 px-8 py-3 bg-slate-950/80 border border-emerald-500/30 rounded-full backdrop-blur-md opacity-0 hover:opacity-100 transition-opacity duration-300 z-50">
+            <button id="video-play-pause" class="text-cyan-400 hover:text-cyan-300 transition-colors">
+                <i class="fa-solid fa-pause text-xl"></i>
+            </button>
+            <div class="w-64 md:w-96 bg-slate-800 h-1.5 rounded-full relative overflow-hidden cursor-pointer" id="video-progress-bar">
+                <div class="bg-gradient-to-r from-cyan-400 to-emerald-500 h-full w-0" id="video-progress-fill"></div>
+            </div>
+            <button id="video-close" class="text-rose-400 hover:text-rose-300 transition-colors font-semibold text-xs tracking-wider uppercase flex items-center space-x-1">
+                <span>跳过</span><i class="fa-solid fa-forward-step"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Fullscreen Countdown Overlay -->
+    <div id="countdown-overlay" class="fixed inset-0 bg-black/95 z-50 hidden flex-col items-center justify-center">
+        <div class="relative">
+            <div id="countdown-number" class="tech-font text-9xl md:text-[15rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-emerald-500 transform scale-50 opacity-0 transition-all duration-500 ease-out" style="filter: drop-shadow(0 0 30px rgba(16,185,129,0.8))">3</div>
+            <div class="absolute -inset-10 border border-emerald-500/20 rounded-full animate-ping pointer-events-none"></div>
+            <div class="absolute -inset-20 border border-cyan-500/10 rounded-full animate-pulse pointer-events-none"></div>
+        </div>
+        <p class="mt-8 text-emerald-400 tracking-[0.5em] text-sm md:text-lg tech-font animate-pulse">INITIATING CLASSROOM QUANTUM INTERACTION</p>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="bg-slate-950 border-2 border-emerald-500/40 rounded-2xl w-full max-w-lg overflow-hidden" style="box-shadow: 0 0 50px rgba(16,185,129,0.3)">
+            <div class="bg-gradient-to-r from-slate-900 to-emerald-950/40 px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="text-emerald-400 font-bold tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> 智慧系统控制后台
+                </h3>
+                <button id="close-settings" class="text-slate-400 hover:text-rose-400 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-5 max-h-[70vh] overflow-y-auto">
+                <!-- Title inputs -->
+                <div>
+                    <label class="block text-xs text-slate-400 tracking-wider mb-2 uppercase">推介会主标题</label>
+                    <input type="text" id="input-main-title" class="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500 rounded px-3 py-2 text-sm text-slate-100 focus:outline-none transition-colors" value="精明课室 2.0 启动礼">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-400 tracking-wider mb-2 uppercase">推介会副标题</label>
+                    <textarea id="input-sub-title" rows="2" class="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500 rounded px-3 py-2 text-sm text-slate-100 focus:outline-none transition-colors">智能重塑教学空间，数据赋能高效课堂。开启智慧教育新纪元，请激活智慧星门以释放未来教学的无限可能。</textarea>
+                </div>
+
+                <!-- ===== VIDEO SECTION ===== -->
+                <div>
+                    <label class="block text-xs text-slate-400 tracking-wider mb-3 uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-film text-emerald-400"></i> 推介视频
+                        <span id="video-status-badge" class="ml-auto px-2 py-0.5 rounded text-[10px] font-mono bg-rose-900/40 text-rose-400 border border-rose-500/30">未载入</span>
+                    </label>
+
+                    <!-- Method 1: File Upload (PRIMARY — most reliable) -->
+                    <div id="drop-zone" class="rounded-xl p-5 text-center cursor-pointer mb-3 relative" onclick="document.getElementById('file-input').click()">
+                        <input type="file" id="file-input" accept="video/mp4,video/webm,video/ogg,video/*" class="hidden">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-emerald-400 mb-2 block"></i>
+                        <p class="text-sm text-slate-300 font-medium">点击选择视频文件</p>
+                        <p class="text-xs text-slate-500 mt-1">或将 MP4 文件拖拽至此处</p>
+                        <p id="file-name-display" class="text-xs text-cyan-400 mt-2 font-mono hidden"></p>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="flex items-center gap-3 my-3">
+                        <div class="flex-1 h-px bg-slate-800"></div>
+                        <span class="text-xs text-slate-500">或输入视频网址</span>
+                        <div class="flex-1 h-px bg-slate-800"></div>
+                    </div>
+
+                    <!-- Method 2: URL input (fallback) -->
+                    <input type="text" id="input-video-url" placeholder="https://example.com/video.mp4" class="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500 rounded px-3 py-2 text-sm text-slate-400 focus:outline-none transition-colors placeholder-slate-600">
+                    <p class="text-[10px] text-slate-600 mt-1">支持 MP4、WebM、OGG 格式的直链地址</p>
+                </div>
+
+                <!-- SFX toggle -->
+                <div class="pt-2 border-t border-slate-900 flex justify-between items-center text-xs text-slate-400">
+                    <span>音频反馈音效</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggle-sfx" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <span class="ml-2 text-emerald-400">音效已开启</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 p-4 border-t border-slate-800 flex justify-end gap-3">
+                <button id="reset-settings" class="px-4 py-2 text-xs border border-slate-700 hover:border-rose-500 text-slate-400 hover:text-rose-400 rounded transition-all">恢复默认</button>
+                <button id="save-settings" class="px-4 py-2 text-xs bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded transition-all">保存并更新</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="w-full p-6 text-center text-slate-600 text-[10px] tracking-widest tech-font z-10 relative">
+        &copy; 2026 SMART CLASSROOM 2.0 INITIATIVE. ALL RIGHTS RESERVED. POWERED BY EDU-TECH.
+    </footer>
+
+    <script>
+        // --- AUDIO SYNTH ---
+        const AudioSynth = {
+            ctx: null, enabled: true,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            playBeep(freq = 600, duration = 0.1) {
+                if (!this.enabled) return; this.init();
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(freq * 1.5, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + duration);
+            },
+            playScanPulse(progress) {
+                if (!this.enabled) return; this.init();
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                const baseFreq = 150 + (progress * 4.5);
+                osc.frequency.setValueAtTime(baseFreq, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.2, this.ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+                osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.08);
+            },
+            playHypeRiser() {
+                if (!this.enabled) return; this.init();
+                const duration = 2.0, osc = this.ctx.createOscillator(), gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(80, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + duration);
+                gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(300, this.ctx.currentTime);
+                filter.frequency.exponentialRampToValueAtTime(2000, this.ctx.currentTime + duration);
+                osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + duration);
+            },
+            playLaunchBoom() {
+                if (!this.enabled) return; this.init();
+                const duration = 3.5, now = this.ctx.currentTime;
+                const subOsc = this.ctx.createOscillator(), subGain = this.ctx.createGain();
+                subOsc.type = 'sine';
+                subOsc.frequency.setValueAtTime(120, now);
+                subOsc.frequency.exponentialRampToValueAtTime(35, now + duration);
+                subGain.gain.setValueAtTime(0.3, now);
+                subGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                const bufferSize = this.ctx.sampleRate * duration;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noiseNode = this.ctx.createBufferSource();
+                noiseNode.buffer = buffer;
+                const noiseFilter = this.ctx.createBiquadFilter();
+                noiseFilter.type = 'bandpass';
+                noiseFilter.frequency.setValueAtTime(800, now);
+                noiseFilter.frequency.exponentialRampToValueAtTime(150, now + duration);
+                const noiseGain = this.ctx.createGain();
+                noiseGain.gain.setValueAtTime(0.15, now);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                subOsc.connect(subGain); subGain.connect(this.ctx.destination);
+                noiseNode.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(this.ctx.destination);
+                subOsc.start(now); subOsc.stop(now + duration);
+                noiseNode.start(now); noiseNode.stop(now + duration);
+            }
+        };
+
+        // --- PARTICLE CANVAS ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.4; this.speedY = (Math.random() - 0.5) * 0.4;
+                this.opacity = Math.random() * 0.6 + 0.2;
+                this.color = Math.random() > 0.5 ? '6, 182, 212' : '16, 185, 129';
+            }
+            update() {
+                this.x += this.speedX; this.y += this.speedY;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`; ctx.fill();
+            }
+        }
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+        function animateBg() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 110) {
+                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(16, 185, 129, ${0.12 - (distance / 110) * 0.12})`; ctx.lineWidth = 0.5; ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateBg);
+        }
+        animateBg();
+
+        // --- STATE ---
+        let isScanning = false, scanProgress = 0, scanTimer = null, isVideoPlaying = false;
+        let videoObjectURL = null; // holds blob URL for uploaded file
+
+        // --- ELEMENTS ---
+        const triggerArea = document.getElementById('trigger-area');
+        const scanStatusText = document.getElementById('scan-status');
+        const progressCircle = document.getElementById('progress-circle');
+        const scannerBeam = document.getElementById('scanner-beam');
+        const countdownOverlay = document.getElementById('countdown-overlay');
+        const countdownNumber = document.getElementById('countdown-number');
+        const videoContainer = document.getElementById('video-container');
+        const launchVideo = document.getElementById('launch-video');
+        const videoProgressFill = document.getElementById('video-progress-fill');
+        const videoProgressBar = document.getElementById('video-progress-bar');
+        const videoPlayPauseBtn = document.getElementById('video-play-pause');
+        const videoCloseBtn = document.getElementById('video-close');
+        const settingsModal = document.getElementById('settings-modal');
+        const mainTitle = document.getElementById('main-title');
+        const subTitle = document.getElementById('sub-title');
+        const noVideoWarning = document.getElementById('no-video-warning');
+        const videoStatusBadge = document.getElementById('video-status-badge');
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        const inputVideoUrl = document.getElementById('input-video-url');
+        const toggleSfx = document.getElementById('toggle-sfx');
+
+        function setProgress(percent) {
+            progressCircle.style.strokeDashoffset = 439.8 - (percent / 100) * 439.8;
+        }
+
+        inputVideoUrl.value = './Untitled design.mp4';
+        updateVideoStatus(true, 'Untitled design.mp4');
+
+        function hasVideo() {
+            return launchVideo.src && launchVideo.src !== window.location.href && launchVideo.src !== '';
+        }
+
+        function updateVideoStatus(loaded, name) {
+            if (loaded) {
+                videoStatusBadge.className = 'ml-auto px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-900/40 text-emerald-400 border border-emerald-500/30';
+                videoStatusBadge.textContent = name ? `✓ ${name}` : '✓ 已载入';
+                noVideoWarning.classList.add('hidden');
+            } else {
+                videoStatusBadge.className = 'ml-auto px-2 py-0.5 rounded text-[10px] font-mono bg-rose-900/40 text-rose-400 border border-rose-500/30';
+                videoStatusBadge.textContent = '未载入';
+            }
+        }
+
+        // --- FILE UPLOAD (main method) ---
+        function loadVideoFile(file) {
+            if (!file || !file.type.startsWith('video/')) {
+                alert('请选择有效的视频文件（MP4、WebM 等）');
+                return;
+            }
+            // Revoke previous object URL to free memory
+            if (videoObjectURL) URL.revokeObjectURL(videoObjectURL);
+
+            videoObjectURL = URL.createObjectURL(file);
+            launchVideo.src = videoObjectURL;
+            launchVideo.load();
+
+            const shortName = file.name.length > 25 ? file.name.substring(0, 22) + '...' : file.name;
+            fileNameDisplay.textContent = '✓ ' + file.name;
+            fileNameDisplay.classList.remove('hidden');
+            inputVideoUrl.value = '';
+            updateVideoStatus(true, shortName);
+            AudioSynth.playBeep(800, 0.15);
+        }
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) loadVideoFile(e.target.files[0]);
+        });
+
+        // Drag and drop
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) loadVideoFile(file);
+        });
+
+        // --- SCAN LOGIC ---
+        toggleSfx.addEventListener('change', (e) => { AudioSynth.enabled = e.target.checked; });
+
+        triggerArea.addEventListener('mouseenter', () => { if (!isScanning) AudioSynth.playBeep(600, 0.15); });
+
+        function startScan() {
+            if (isScanning || isVideoPlaying) return;
+            if (!hasVideo()) {
+                noVideoWarning.classList.remove('hidden');
+                AudioSynth.playBeep(300, 0.3);
+                // Flash the settings button as hint
+                const btn = document.getElementById('settings-btn');
+                btn.classList.add('border-amber-400', 'text-amber-400');
+                setTimeout(() => btn.classList.remove('border-amber-400', 'text-amber-400'), 1500);
+                return;
+            }
+            noVideoWarning.classList.add('hidden');
+            isScanning = true; scanProgress = 0;
+            scannerBeam.classList.remove('hidden');
+            scanStatusText.textContent = "系统加载中...";
+            scanStatusText.classList.add('text-cyan-400', 'animate-pulse');
+            document.getElementById('biometric-icon').classList.add('scale-95', 'text-cyan-400');
+
+            scanTimer = setInterval(() => {
+                scanProgress += 1.5;
+                if (scanProgress >= 100) {
+                    scanProgress = 100; setProgress(100);
+                    clearInterval(scanTimer);
+                    triggerLaunchSequence();
+                } else {
+                    setProgress(scanProgress);
+                    if (Math.floor(scanProgress) % 8 === 0) AudioSynth.playScanPulse(scanProgress);
+                }
+            }, 25);
+        }
+
+        function cancelScan() {
+            if (!isScanning) return;
+            isScanning = false; clearInterval(scanTimer); scanProgress = 0; setProgress(0);
+            scannerBeam.classList.add('hidden');
+            scanStatusText.textContent = "激活智慧星门";
+            scanStatusText.classList.remove('text-cyan-400', 'animate-pulse');
+            document.getElementById('biometric-icon').classList.remove('scale-95', 'text-cyan-400');
+            AudioSynth.playBeep(300, 0.3);
+        }
+
+        triggerArea.addEventListener('touchstart', (e) => { e.preventDefault(); startScan(); });
+        triggerArea.addEventListener('touchend', (e) => { e.preventDefault(); if (scanProgress < 100) cancelScan(); });
+        triggerArea.addEventListener('mousedown', () => startScan());
+        window.addEventListener('mouseup', () => { if (isScanning && scanProgress < 100) cancelScan(); });
+
+        function triggerLaunchSequence() {
+            AudioSynth.playHypeRiser();
+            document.getElementById('launch-hub').style.transform = 'scale(1.3)';
+            document.getElementById('launch-hub').style.opacity = '0';
+            document.getElementById('intro-texts').style.transform = 'translateY(-50px)';
+            document.getElementById('intro-texts').style.opacity = '0';
+            setTimeout(initiateHypeCountdown, 800);
+        }
+
+        function initiateHypeCountdown() {
+            countdownOverlay.classList.remove('hidden');
+            countdownOverlay.classList.add('flex');
+            let count = 3;
+            function nextNum() {
+                if (count > 0) {
+                    AudioSynth.playBeep(700 + (3 - count) * 150, 0.25);
+                    countdownNumber.textContent = count;
+                    countdownNumber.style.transform = 'scale(0.5)'; countdownNumber.style.opacity = '0';
+                    void countdownNumber.offsetWidth;
+                    countdownNumber.style.transform = 'scale(1)'; countdownNumber.style.opacity = '1';
+                    count--; setTimeout(nextNum, 1000);
+                } else {
+                    AudioSynth.playLaunchBoom();
+                    countdownNumber.textContent = "LAUNCH";
+                    countdownNumber.style.transform = 'scale(1.4)';
+                    countdownNumber.style.color = '#10b981';
+                    setTimeout(() => {
+                        countdownOverlay.classList.add('hidden');
+                        countdownOverlay.classList.remove('flex');
+                        startVideoPlayback();
+                    }, 800);
+                }
+            }
+            nextNum();
+        }
+
+        function startVideoPlayback() {
+            isVideoPlaying = true;
+            videoContainer.classList.remove('hidden');
+            videoContainer.classList.add('flex');
+            void videoContainer.offsetWidth;
+            videoContainer.style.opacity = '1';
+            launchVideo.play().catch(() => { launchVideo.muted = true; launchVideo.play(); });
+        }
+
+        launchVideo.addEventListener('timeupdate', () => {
+            if (launchVideo.duration) videoProgressFill.style.width = `${(launchVideo.currentTime / launchVideo.duration) * 100}%`;
+        });
+
+        videoProgressBar.addEventListener('click', (e) => {
+            const rect = videoProgressBar.getBoundingClientRect();
+            launchVideo.currentTime = ((e.clientX - rect.left) / rect.width) * launchVideo.duration;
+        });
+
+        videoPlayPauseBtn.addEventListener('click', () => {
+            if (launchVideo.paused) { launchVideo.play(); videoPlayPauseBtn.innerHTML = '<i class="fa-solid fa-pause text-xl"></i>'; }
+            else { launchVideo.pause(); videoPlayPauseBtn.innerHTML = '<i class="fa-solid fa-play text-xl"></i>'; }
+        });
+
+        function endVideo() {
+            launchVideo.pause(); launchVideo.currentTime = 0;
+            videoContainer.style.opacity = '0';
+            setTimeout(() => {
+                videoContainer.classList.add('hidden'); videoContainer.classList.remove('flex');
+                isVideoPlaying = false;
+                document.getElementById('launch-hub').style.transform = 'scale(1)';
+                document.getElementById('launch-hub').style.opacity = '1';
+                document.getElementById('intro-texts').style.transform = 'translateY(0)';
+                document.getElementById('intro-texts').style.opacity = '1';
+                cancelScan();
+            }, 1000);
+        }
+
+        launchVideo.addEventListener('ended', endVideo);
+        videoCloseBtn.addEventListener('click', endVideo);
+        launchVideo.addEventListener('error', () => {
+            if (isVideoPlaying) {
+                endVideo();
+                setTimeout(() => alert('视频载入失败。请检查文件格式或网络连接。'), 500);
+            }
+        });
+
+        // --- SETTINGS ---
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            settingsModal.classList.remove('hidden'); settingsModal.classList.add('flex');
+            AudioSynth.playBeep(800, 0.1);
+        });
+        document.getElementById('close-settings').addEventListener('click', () => {
+            settingsModal.classList.add('hidden'); settingsModal.classList.remove('flex');
+            AudioSynth.playBeep(400, 0.1);
+        });
+
+        document.getElementById('save-settings').addEventListener('click', () => {
+            mainTitle.textContent = document.getElementById('input-main-title').value;
+            subTitle.textContent = document.getElementById('input-sub-title').value;
+
+            const urlVal = inputVideoUrl.value.trim();
+            if (urlVal) {
+                // URL mode: clear any file upload and use the URL
+                if (videoObjectURL) { URL.revokeObjectURL(videoObjectURL); videoObjectURL = null; }
+                launchVideo.src = urlVal;
+                launchVideo.load();
+                fileNameDisplay.classList.add('hidden');
+                updateVideoStatus(true, urlVal.split('/').pop().substring(0, 20));
+            }
+            settingsModal.classList.add('hidden'); settingsModal.classList.remove('flex');
+            AudioSynth.playBeep(900, 0.2);
+        });
+
+        document.getElementById('reset-settings').addEventListener('click', () => {
+            document.getElementById('input-main-title').value = "精明课室 2.0 启动礼";
+            document.getElementById('input-sub-title').value = "智能重塑教学空间，数据赋能高效课堂。开启智慧教育新纪元，请激活智慧星门以释放未来教学的无限可能。";
+            inputVideoUrl.value = '';
+            fileNameDisplay.classList.add('hidden');
+            if (videoObjectURL) { URL.revokeObjectURL(videoObjectURL); videoObjectURL = null; }
+            launchVideo.removeAttribute('src');
+            updateVideoStatus(false);
+            AudioSynth.playBeep(500, 0.15);
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (!settingsModal.classList.contains('hidden')) { settingsModal.classList.add('hidden'); settingsModal.classList.remove('flex'); }
+                if (isVideoPlaying) endVideo();
+            }
+        });
+    </script>
+</body>
+</html>
