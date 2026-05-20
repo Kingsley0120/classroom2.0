@@ -153,7 +153,7 @@
 
     <!-- Fullscreen Video Container -->
     <div id="video-container" class="fixed inset-0 w-full h-full bg-black z-40 hidden items-center justify-center" style="opacity:0; transition: opacity 1s;">
-        <video id="launch-video" class="w-full h-full object-cover" src="/workspaces/classroom2.0/video.mp4" playsinline>
+        <video id="launch-video" class="w-full h-full object-cover" playsinline>
             您的浏览器不支持 HTML5 视频播放。
         </video>
         <div id="video-controls" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center space-x-6 px-8 py-3 bg-slate-950/80 border border-emerald-500/30 rounded-full backdrop-blur-sm z-50">
@@ -167,16 +167,6 @@
                 <span>跳过</span><i class="fa-solid fa-forward-step"></i>
             </button>
         </div>
-    </div>
-
-    <!-- Fullscreen Countdown Overlay -->
-    <div id="countdown-overlay" class="fixed inset-0 bg-black/95 z-50 hidden flex-col items-center justify-center">
-        <div class="relative">
-            <div id="countdown-number" class="tech-font text-9xl md:text-[15rem] font-black text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-emerald-500 transform scale-50 opacity-0 transition-all duration-300">3</div>
-            <div class="absolute -inset-10 border border-emerald-500/20 rounded-full animate-ping pointer-events-none"></div>
-            <div class="absolute -inset-20 border border-cyan-500/10 rounded-full animate-pulse pointer-events-none"></div>
-        </div>
-        <p class="mt-8 text-emerald-400 tracking-[0.5em] text-sm md:text-lg tech-font animate-pulse">INITIATING CLASSROOM QUANTUM INTERACTION</p>
     </div>
 
     <!-- Settings Modal -->
@@ -376,8 +366,6 @@
         const scanStatusText = document.getElementById('scan-status');
         const progressCircle = document.getElementById('progress-circle');
         const scannerBeam = document.getElementById('scanner-beam');
-        const countdownOverlay = document.getElementById('countdown-overlay');
-        const countdownNumber = document.getElementById('countdown-number');
         const videoContainer = document.getElementById('video-container');
         const launchVideo = document.getElementById('launch-video');
         const videoProgressFill = document.getElementById('video-progress-fill');
@@ -399,8 +387,9 @@
             progressCircle.style.strokeDashoffset = 439.8 - (percent / 100) * 439.8;
         }
 
-        inputVideoUrl.value = './Untitled design.mp4';
-        updateVideoStatus(true, 'Untitled design.mp4');
+        // Set initial video from URL input (relative path or full URL)
+        inputVideoUrl.value = './video.mp4';
+        updateVideoStatus(true, 'video.mp4');
 
         function hasVideo() {
             return launchVideo.src && launchVideo.src !== window.location.href && launchVideo.src !== '';
@@ -462,7 +451,6 @@
             if (!hasVideo()) {
                 noVideoWarning.classList.remove('hidden');
                 AudioSynth.playBeep(300, 0.3);
-                // Flash the settings button as hint
                 const btn = document.getElementById('settings-btn');
                 btn.classList.add('border-amber-400', 'text-amber-400');
                 setTimeout(() => btn.classList.remove('border-amber-400', 'text-amber-400'), 1500);
@@ -509,7 +497,7 @@
             document.getElementById('launch-hub').style.opacity = '0';
             document.getElementById('intro-texts').style.transform = 'translateY(-50px)';
             document.getElementById('intro-texts').style.opacity = '0';
-            // CHANGED: Skip countdown and start video directly after 800ms
+            // Video plays directly after 800ms (no countdown)
             setTimeout(startVideoPlayback, 800);
         }
 
@@ -603,6 +591,9 @@
                 if (isVideoPlaying) endVideo();
             }
         });
+
+        // Initialize video on page load
+        launchVideo.src = './video.mp4';
     </script>
 </body>
 </html>
